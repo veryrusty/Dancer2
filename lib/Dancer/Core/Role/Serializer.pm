@@ -5,7 +5,7 @@ use Moo::Role;
 with 'Dancer::Core::Role::Engine';
 
 sub supported_hooks { 
-    qw(before_serializer after_serializer)
+    qw(before_deserializer after_deserializer)
 }
 
 sub type { 'Serializer' }
@@ -18,9 +18,9 @@ around serialize => sub {
     my ($orig, $self) = (shift, shift);
     my ($data) = @_;
 
-    $self->execute_hooks('before_serializer', $data);
+    $self->execute_hooks('before_deserializer', $data);
     my $serialized = $self->$orig($data);
-    $self->execute_hooks('after_serializer', $serialized);
+    $self->execute_hooks('after_deserializer', $serialized);
 
     return $serialized;
 };
