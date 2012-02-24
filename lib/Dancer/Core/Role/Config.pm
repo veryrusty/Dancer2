@@ -229,7 +229,7 @@ sub _get_config_for_engine {
 
     return {   
         %{ $default_config }, 
-        %{ $config->{engines}{$engine}{$name} } ,
+        %{ $config->{engines}{$engine}{$name} || {} } ,
     } || $default_config;
 }
 
