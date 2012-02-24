@@ -4,6 +4,11 @@ use Carp 'croak';
 
 with 'Dancer::Core::Role::Serializer';
 
+has content_type => (
+    is      => 'rw',
+    isa     => sub { Dancer::Moo::Types::Str(@_) },
+    default => sub {'application/json'},
+);
 
 # helpers
 
@@ -34,19 +39,14 @@ sub serialize {
         $options->{convert_blessed} = $config->{convert_blessed};
     }
 
-    $self->loaded();
-
     JSON::to_json( $entity, $options );
 }
 
 sub deserialize {
     my ($self, $entity, $options) = @_;
-
-    $self->loaded();
-
     JSON::from_json( $entity, $options );
 }
 
-sub content_type {'application/json'}
+#sub content_type {'application/json'}
 
 1;
