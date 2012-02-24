@@ -34,13 +34,16 @@ sub serialize {
         $options->{convert_blessed} = $config->{convert_blessed};
     }
 
-    require 'JSON.pm';
+    $self->loaded();
+
     JSON::to_json( $entity, $options );
 }
 
 sub deserialize {
     my ($self, $entity, $options) = @_;
-    require 'JSON.pm';
+
+    $self->loaded();
+
     JSON::from_json( $entity, $options );
 }
 
