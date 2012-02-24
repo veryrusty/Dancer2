@@ -14,6 +14,14 @@ requires 'serialize';
 requires 'deserialize';
 requires 'loaded';
 
+sub BUILD {
+    my $self = shift;
+    if (!$self->can('content_type')){
+        die "No content type attribute on this serializer";
+    }
+    $self->loaded();
+}
+
 around serialize => sub {
     my ($orig, $self) = (shift, shift);
     my ($data) = @_;
@@ -24,9 +32,6 @@ around serialize => sub {
 
     return $serialized;
 };
-
-# attribute vs method?
-sub content_type { 'text/plain' }
 
 # most serializer don't have to overload this one
 sub support_content_type {
