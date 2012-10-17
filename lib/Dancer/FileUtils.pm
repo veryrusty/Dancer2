@@ -7,8 +7,25 @@ use warnings;
 
 use File::Basename ();
 use File::Spec;
+use File::Temp qw(tempfile);
 use Carp;
 use Cwd 'realpath';
+
+use Exporter 'import';
+our @EXPORT_OK = qw(
+    dirname open_file path read_file_content read_glob_content
+    path_or_empty set_file_mode normalize_path
+    atomic_write
+);
+
+# path should not verify paths
+# just normalize
+sub path {
+    my @parts = @_;
+    my $path  = File::Spec->catfile(@parts);
+
+    return normalize_path($path);
+}
 
 =head1 DESCRIPTION
 
@@ -49,17 +66,20 @@ file reading subroutines or using additional modules.
 
     set_file_mode($fh);
 
-=head1 EXPORT
+=head2 EXPORTS
 
 Nothing by default. You can provide a list of subroutines to import.
 
 =cut
 
-use Exporter 'import';
-our @EXPORT_OK = qw(
-    dirname open_file path read_file_content read_glob_content
-    path_or_empty set_file_mode normalize_path
-);
+sub atomic_write {
+    my ($path, $file, $data) = @_;
+    my ($fh, $filename) = tempfile("tmpXXXXXXXXX", DIR => $path);
+    set_file_mode($fh);
+    print $fh $data;
+    close $fh or die "Can't close '$file': $!\n";
+    rename($filename, $file) or die "Can't move '$filename' to '$file'";
+}
 
 
 =func my $path = path( 'folder', 'folder', 'filename');
@@ -76,9 +96,11 @@ sub path {
     return normalize_path($path);
 }
 
-=func my $path = path_or_empty('folder, 'folder','filename');
+=func path_or_empty
 
 Like path, but returns '' if path doesn't exist.
+
+    my $path = path_or_empty('folder, 'folder','filename');
 
 =cut
 
