@@ -34,4 +34,46 @@ subtest yaml_session_as_object => sub {
     rmdir $dir   or die "unable to rmdir $dir : $!";
 };
 
+subtest "session from a Dancer app" => sub {
+    my $sid;
+    {
+        package App;
+        use Dancer 2;
+
+        set session => 'Simple';
+        
+        get '/session_id' => sub {
+            $sid = session->id;
+        };
+
+        get '/set_session' => sub {
+            session foo => 42;
+        };
+
+        get '/without_session_call' => sub {
+            "here"
+        };
+
+        get '/with_many_session_calls' => sub {
+            session a => 1;
+            session b => 2;
+            session 'foo';
+        };
+
+    }
+
+    use Dancer::Test 'App';
+
+    route_exists '/session_id';
+    isnt $sid, undef, "Session id has been set";
+
+    response_headers_are_deeply [GET => '/set_session'],
+      [ 'Content-Length' => 2,
+        'Content-Type'   => 'text/html; charset=UTF-8',
+        'Server'         => 'Perl Dancer',
+        "Set-Cookie"     => "dancer.session=$sid; HttpOnly"
+      ],
+      "The session ID is set only once";
+};
+
 done_testing;
