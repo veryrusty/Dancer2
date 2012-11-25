@@ -1,6 +1,5 @@
-# ABSTRACT: TODO
-
 package Dancer::Core::App;
+# ABSTRACT: class that encapsulates a package in a Dancer application
 
 use strict;
 use warnings;
@@ -138,30 +137,7 @@ sub engine {
 sub session {
     my ($self, $key, $value) = @_;
 
-    # make sure we have a session engine
-    my $engine = $self->engine('session');
-
-    # Read the session id from the cookie
-    my $cookie = $self->context->cookie($engine->name);
-    my $session_id;
-    $session_id = $cookie->value if defined $cookie;
-    #warn "session id found: $session_id" if defined $session_id;
-
-    # fetch or create the session, based on the existing session id
-    my $session;
-    eval { $session = $engine->get_current_session($session_id) };
-    croak "Unable to retrieve session: $@" if $@;
-
-    # make sure the session object is updated in the context
-    # FIXME: this should be necessary if the session engine was a different
-    # object than the session itself, but it's a major chnage and I don't have
-    # the time yet...
-    $self->config->{session} = $session;
-
-    # Generate a session cookie; we want to do this regardless of whether the
-    # session is new or existing, so that the cookie expiry is updated.
-    $self->context->response->push_header('Set-Cookie' => $session->cookie->to_header) 
-        if defined $session && defined $session->cookie;
+    my $session = $self->_init_current_session();
 
     # now return what is asked:
     #  - ether the whole session object, or do a get or a set
@@ -360,6 +336,7 @@ sub send_file {
 sub BUILD {
     my ($self) = @_;
     $self->init_route_handlers();
+    $self->_init_standard_hooks();
 }
 
 sub finish {
@@ -421,6 +398,57 @@ sub compile_hooks {
         }
         $self->replace_hook($position, $compiled_hooks);
     }
+}
+
+sub _init_current_session {
+    my ($self, $add_session_cookie_to_headers) = @_;
+    return if ! defined $self->context;
+
+    # make sure we have a session engine
+    my $engine = $self->engine('session');
+
+    # Read the session id from the cookie
+    my $cookie = $self->context->cookie($engine->name);
+    my $session_id;
+    $session_id = $cookie->value if defined $cookie;
+    # warn "session id found: $session_id" if defined $session_id;
+
+    # fetch or create the session, based on the existing session id
+    my $session;
+    eval { $session = $engine->get_current_session($session_id) };
+    croak "Unable to retrieve session: $@" if $@;
+
+    # make sure the session object is updated in the context
+    # FIXME: this should be necessary if the session engine was a different
+    # object than the session itself, but it's a major chnage and I don't have
+    # the time yet...
+    $self->config->{session} = $session;
+
+    if ($add_session_cookie_to_headers) {
+        # warn "pushing session cookie : ".$session->cookie->to_header;
+        $self->context->response->push_header(
+            'Set-Cookie' => $session->cookie->to_header);
+    }
+
+    return $session;
+}
+
+# All standard hooks an app can have go there
+# NOTE: We should be able to move many thing here, I think it can be a good
+# design to extract as much code as we can into standard hooks.
+# - sukria
+sub _init_standard_hooks {
+    my ($self) = @_;
+
+    # make sure we add the session cookie in the header
+    $self->add_hook(
+        Dancer::Core::Hook->new(
+            name => "after_request",
+            code => sub {
+                $self->_init_current_session(1);
+            }
+        )
+    );
 }
 
 has name => (

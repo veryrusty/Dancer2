@@ -34,6 +34,19 @@ subtest yaml_session_as_object => sub {
     rmdir $dir   or die "unable to rmdir $dir : $!";
 };
 
+sub _count_header {
+    my ($route, $header) = @_;
+    
+    my $counter = 0;
+    my $resp = dancer_response($route);
+    for (my $i = 0; $i < scalar(@{$resp->headers_to_array}); $i += 2) {
+        my ($name, $value) =
+          ($resp->headers_to_array->[$i], $resp->headers_to_array->[$i + 1]);
+        $counter++ if $name eq $header;
+    }
+    return $counter;
+}
+
 subtest "session from a Dancer app" => sub {
     my $sid;
     {
@@ -67,13 +80,17 @@ subtest "session from a Dancer app" => sub {
     route_exists '/session_id';
     isnt $sid, undef, "Session id has been set";
 
-    response_headers_are_deeply [GET => '/set_session'],
-      [ 'Content-Length' => 2,
-        'Content-Type'   => 'text/html; charset=UTF-8',
-        'Server'         => 'Perl Dancer',
-        "Set-Cookie"     => "dancer.session=$sid; HttpOnly"
-      ],
-      "The session ID is set only once";
+    my $counter;
+
+    # make sure we have only one Set-Cookie header
+    $counter = _count_header('/set_session', 'Set-Cookie');
+    is $counter, 1, "Set-Cookie was seen only once for /set_session";
+    
+    $counter = _count_header('/without_session_call', 'Set-Cookie');
+    is $counter, 1, "... and also for /without_session_call";
+
+    $counter = _count_header('/with_many_session_calls', 'Set-Cookie');
+    is $counter, 1, "... and also for /with_many_session_calls";
 };
 
 done_testing;
