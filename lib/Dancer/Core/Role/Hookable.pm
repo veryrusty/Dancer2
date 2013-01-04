@@ -15,11 +15,27 @@ has hooks => (
     lazy => 1,
 );
 
+=method BUILD
+
+initialize the hookable role
+
+after a hookable object is built, we go over its postponed hooks and register
+them if any.
+
+=cut
 sub BUILD { }
 
-# this hash contains all known core hooks with their 'human' name
-# classes that consume the role can override this method to provide
-# their own aliases for their own hooks
+=method hook_aliases
+
+this hash contains all known core hooks with their 'human' name
+classes that consume the role can override this method to provide
+their own aliases for their own hooks
+
+Ex:
+    { before => 'core.app.before_request' }
+    { $name => $method }
+
+=cut
 sub hook_aliases {
     {
         before                 => 'core.app.before_request',
@@ -81,8 +97,14 @@ sub _build_hooks {
     return \%hooks;
 }
 
-# This binds a coderef to an installed hook if not already
-# existing
+=method add_hook
+
+This binds a coderef to an installed hook if not already
+existing
+
+param: $hook
+
+=cut
 sub add_hook {
     my ($self, $hook) = @_;
     my $name = $hook->name;
@@ -94,9 +116,15 @@ sub add_hook {
     push @{ $self->hooks->{$name} }, $code;
 }
 
-# allows the caller to replace the current list of hooks at the given position
-# this is useful if the object where this role is composed wants to compile the
-# hooks.
+=method replace_hook
+
+allows the caller to replace the current list of hooks at the given position
+this is useful if the object where this role is composed wants to compile the
+hooks.
+
+params: $position, $hooks
+
+=cut
 sub replace_hook {
     my ($self, $position, $hooks) = @_;
 
@@ -106,14 +134,24 @@ sub replace_hook {
     $self->hooks->{$position} = $hooks;
 }
 
-# Boolean flag to tells if the hook is registered or not
+=method has_hook
+
+Boolean flag to tells if the hook is registered or not
+
+params: $hook_name
+=cut
 sub has_hook {
     my ($self, $hook_name) = @_;
     return
         exists $self->hooks->{$hook_name};
 }
 
-# Execute the hook at the given position
+=method execute_hook
+Execute the hook at the given position
+
+params: $name, @args
+
+=cut
 sub execute_hook {
     my ($self, $name, @args) = @_;
 
