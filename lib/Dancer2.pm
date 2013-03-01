@@ -43,8 +43,10 @@ This doc describes the Dancer2 application core and is therefore meant for
 Dancer2 core developers. If you're a user of Dancer2, the L<Dancer2::Manual> is
 a much better place to start.
 
-You are also welcome to join our mailing list, and we're also on IRC: #dancer
-on irc.perl.org.
+You are also welcome to join our L<mailing list|http://lists.preshweb.co.uk/mailman/listinfo/dancer-users>, 
+and we're on IRC with an active and helpful community: #dancer on irc.perl.org 
+- or L<http://dancer.pm/irc> for a web-based IRC chat interface if you don't 
+have an IRC client installed and just want a quick chat.
 
 =cut
 
