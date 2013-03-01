@@ -25,8 +25,8 @@ $Dancer2::VERSION ||= '0.01'; # 2.0.1
 
 =head1 DESCRIPTION
 
-This is the main module for the Dancer2 distribution. It contains logic for creating
-a new Dancer2 application.
+This is the main module for the Dancer2 distribution. It contains logic for
+creating a new Dancer2 application.
 
 =head1 OVERVIEW
 
@@ -39,9 +39,9 @@ An application can be as simple as this simple hello world script:
     get '/' => sub { "Hello World" };
     dance;
 
-This doc describes the Dancer2 application core and therefore meant for Dancer2
-core developers. If you're a user of Dancer2, you should forget about this and
-read the L<Dancer2::Manual>.
+This doc describes the Dancer2 application core and is therefore meant for 
+Dancer2 core developers. If you're a user of Dancer2, the L<Dancer2::Manual> is
+a much better place to start.
 
 You are also welcome to join our mailing list, and we're also on IRC: #dancer
 on irc.perl.org.
