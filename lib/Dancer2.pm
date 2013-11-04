@@ -15,7 +15,8 @@ our $AUTHORITY = 'SUKRIA';
 # set version in dist.ini now
 # but we still need a basic version for
 # the tests
-$Dancer2::VERSION ||= '0.09';    # 2.0.9
+$Dancer2::VERSION ||= '0.10_01';  # Stratdat internal use only
+$Dancer2::VERSION = eval $Dancer2::VERSION if $Dancer2::VERSION =~ /_/; # numify for warning-free dev releases
 
 =head1 DESCRIPTION
 
