@@ -119,7 +119,7 @@ around add_hook => sub {
     # if that hook belongs to the app, register it now and return
     return $self->$orig(@_) if $self->has_hook($name);
 
-    # at this point the hook name must be formated like:
+    # at this point the hook name must be formatted like:
     # '$type.$candidate.$name', eg: 'engine.template.before_render' or
     # 'plugin.database.before_dbi_connect'
     my ( $hookable_type, $hookable_name, $hook_name ) = split( /\./, $name );
@@ -450,7 +450,7 @@ sub init_route_handlers {
 
 sub register_route_handlers {
     my ($self) = @_;
-    for my $handler ( @{ $self->{route_handlers} } ) {
+    for my $handler ( @{$self->route_handlers} ) {
         my $handler_code = $handler->{handler};
         $handler_code->register($self);
     }

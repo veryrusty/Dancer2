@@ -115,7 +115,7 @@ my @http_env_keys = (qw/
 foreach my $attr ( @http_env_keys ) {
     has $attr => (
         is      => 'ro',
-        isa     => Str,
+        isa     => Maybe[Str],
         lazy    => 1,
         default => sub { $_[0]->env->{ 'HTTP_' . ( uc $attr ) } },
     );
@@ -341,10 +341,15 @@ has is_behind_proxy => (
 sub host {
     my ($self) = @_;
 
-    return ( $self->is_behind_proxy )
-      ? ( $self->env->{HTTP_X_FORWARDED_HOST}
-          || $self->env->{X_FORWARDED_HOST} )
-      : $self->env->{HTTP_HOST};
+    if ( $self->is_behind_proxy ) {
+        my @hosts = split /\s*,\s*/, (
+          $self->env->{HTTP_X_FORWARDED_HOST} || $self->env->{X_FORWARDED_HOST}
+        );
+
+        return $hosts[0];
+    } else {
+        return $self->env->{'HTTP_HOST'};
+    }
 }
 
 
@@ -874,7 +879,7 @@ table provided by C<uploads()>. It looks at the calling context and returns a
 corresponding value.
 
 If you have many file uploads under the same name, and call C<upload('name')> in
-an array context, the accesor will unroll the ARRAY ref for you:
+an array context, the accessor will unroll the ARRAY ref for you:
 
     my @uploads = request->upload('many_uploads'); # OK
 
@@ -905,7 +910,7 @@ sub _build_params {
     # _before_ we get there, so we have to save it first
     my $previous = $self->_has_params ? $self->_params : {};
 
-    # now parse environement params...
+    # now parse environment params...
     $self->_parse_get_params();
     if ( $self->body_is_parsed ) {
         $self->{_body_params} ||= {};

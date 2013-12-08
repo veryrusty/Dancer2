@@ -184,6 +184,21 @@ sub redirect {
     $self->with_return->($self->response) if $self->has_with_return;
 }
 
+=method halt
+
+Flag the response object as 'halted'.
+
+If called during request dispatch, immediatly returns the response
+to the dispatcher and after hooks will not be run.
+
+=cut
+
+sub halt {
+   my ($self) = @_;
+   $self->response->halt;
+   # Short citcuit any remaining hook/route code
+   $self->with_return->($self->response) if $self->has_with_return;
+}
 
 =attr session
 
@@ -192,11 +207,12 @@ Handle for the current session object, if any
 =cut
 
 has session => (
-    is      => 'rw',
-    isa     => Session,
-    lazy    => 1,
-    builder => '_build_session',
-    clearer => 1,
+    is        => 'rw',
+    isa       => Session,
+    lazy      => 1,
+    builder   => '_build_session',
+    predicate => '_has_session',
+    clearer   => 1,
 );
 
 sub _build_session {
@@ -239,9 +255,9 @@ sub has_session {
 
     my $engine = $self->app->engine('session');
 
-    return $self->{session}
+    return $self->_has_session
       || ( $self->cookie( $engine->cookie_name )
-        && !$self->destroyed_session );
+        && !$self->has_destroyed_session );
 }
 
 =attr destroyed_session
@@ -261,7 +277,7 @@ has destroyed_session => (
 
 =method destroy_session
 
-Destroys the current session and ensures any subsquent session is created
+Destroys the current session and ensures any subsequent session is created
 from scratch and not from the request session cookie
 
 =cut

@@ -238,8 +238,9 @@ sub BUILD {
 }
 
 has exception => (
-    is  => 'ro',
-    isa => Str,
+    is        => 'ro',
+    isa       => Str,
+    predicate => 1,
 );
 
 has response => (
@@ -277,7 +278,7 @@ has content => (
                 status  => $self->status,
             };
             $content->{exception} = $self->exception
-                if defined $self->{exception};
+              if $self->has_exception;
             return $self->serializer->serialize($content);
         }
 
@@ -342,7 +343,7 @@ Create a backtrace of the code where the error is caused.
 This method tries to find out where the error appeared according to the actual
 error message (using the C<message> attribute) and tries to parse it (supporting
 the regular/default Perl warning or error pattern and the L<Devel::SimpleTrace>
-output) and then returns an error-higlighted C<message>.
+output) and then returns an error-highlighted C<message>.
 
 =cut
 
@@ -485,7 +486,7 @@ sub environment {
 
 =method get_caller
 
-Creates a strack trace of callers.
+Creates a stack trace of callers.
 
 =cut
 
