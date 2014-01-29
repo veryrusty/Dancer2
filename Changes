@@ -1,10 +1,18 @@
 {{$NEXT}}
 
+    [ DOCUMENTATION ]
+    * RT#91428: POD encoding set to UTF-8 in main .pm (Gregor Herrmann).
+    * GH#517: Miscellaneous documentation fixes (Cesare Gargano).
+    * GH#522: s/PerlHandler/PerlResponseHandler/ in Apache2 sample configuration
+      (Grzegorz Rożniecki)
+
+0.11      2013-12-15 14:19:22 Europe/Amsterdam
+
     [ ENHANCEMENTS ]
     * GH#481: Don't pollute @INC automatically when Dancer2 is imported, each
       runner is now responsible of including the local ./lib dir if needed.
     * GH#469, 418: Dancer2::Plugin provides a ':no_dsl' flag for modern Plugins
-      (Pedro Molo)
+      (Pedro Melo)
     * GH#485: Keywords 'redirect' and 'forward' exit immediatly when executed in
       a route/hook. New dependency on Return::MultiLevel (Russell Jenkins).
     * GH#495: Use accessor and predicates instead of direct access.
@@ -16,7 +24,7 @@
     * GH#505: Fix empty HTTP_REFERER in Dancer::Core::Request (Menno Blom).
     * GH#503: Multiple reverse proxy support (Menno Blom).
     * GH#371,GH#506: CLI tool rewrite (using App::Cmd, supports plugins, etc.).
-      (Ivan Kruglov, Sawyer X)
+      (Ivan Kruglov, Samit Badle, Sawyer X)
     * GH#498: Add some missing items in MANIFEST.SKIP (Gabor Szabo, Sawyer X).
 
     [ DOCUMENTATION ]
