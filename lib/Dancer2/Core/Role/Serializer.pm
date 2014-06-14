@@ -1,9 +1,9 @@
+package Dancer2::Core::Role::Serializer;
 # ABSTRACT: Role for Serializer engines
 
-package Dancer2::Core::Role::Serializer;
 use Dancer2::Core::Types;
-
 use Moo::Role;
+
 with 'Dancer2::Core::Role::Engine';
 
 sub supported_hooks {
@@ -51,6 +51,7 @@ has content_type => (
     is       => 'ro',
     isa      => Str,
     required => 1,
+    writer   => 'set_content_type'
 );
 
 # most serializer don't have to overload this one
@@ -73,7 +74,7 @@ Any class that consumes this role will be able to be used as a
 serializer under Dancer2.
 
 In order to implement this role, the consumer B<must> implement the
-methods C<serialize>, <deserialize> and C<loaded>, and should define
+methods C<serialize>, C<deserialize> and C<loaded>, and should define
 the C<content_type> attribute value.
 
 =head1 METHODS
@@ -102,6 +103,9 @@ content type defined by the C<content_type> attribute.
 A third optional argument is a hash reference of options to the
 serializer.
 
+The serialize method must return bytes and therefore has to handle any
+encoding.
+
 =method deserialize($content, [\%options])
 
 The inverse method of C<serialize>. Receives the serializer class
@@ -110,6 +114,9 @@ return a reference to the deserialized Perl data structure.
 
 A third optional argument is a hash reference of options to the
 serializer.
+
+The deserialize method receives encoded bytes and must therefore
+handle any decoding required.
 
 =method loaded
 

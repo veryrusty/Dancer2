@@ -151,7 +151,7 @@ sub prefix {
       : $app->lexical_prefix(@_);
 }
 
-sub halt { shift->app->context->halt }
+sub halt { shift->context->halt }
 
 sub _route_parameters {
     my ( $regexp, $code, $options );
@@ -274,7 +274,7 @@ sub push_header  { shift->response->push_header(@_) }
 sub header       { shift->response->header(@_) }
 sub headers      { shift->response->header(@_) }
 sub content_type { shift->response->content_type(@_) }
-sub pass         { shift->response->pass }
+sub pass         { shift->context->pass }
 
 #
 # Route handler helpers
@@ -330,12 +330,16 @@ sub send_error {
     my $serializer = $self->app->engine('serializer');
     my $x = Dancer2::Core::Error->new(
         message => $message,
-        context => $self->app->context,
+        context => $self->context,
         ( status => $status ) x !!$status,
         ( serializer => $serializer ) x !!$serializer,
     )->throw;
 
-    $x;
+    # return if there is a with_return coderef
+    $self->context->with_return->($x)
+      if $self->context->has_with_return;
+
+    return $x;
 }
 
 #
@@ -343,37 +347,37 @@ sub send_error {
 #
 
 sub from_json {
-    my $app = shift->app;
+    shift; # remove first element
     require 'Dancer2/Serializer/JSON.pm';
     Dancer2::Serializer::JSON::from_json(@_);
 }
 
 sub to_json {
-    my $app = shift->app;
+    shift; # remove first element
     require 'Dancer2/Serializer/JSON.pm';
     Dancer2::Serializer::JSON::to_json(@_);
 }
 
 sub from_yaml {
-    my $app = shift->app;
+    shift; # remove first element
     require 'Dancer2/Serializer/YAML.pm';
     Dancer2::Serializer::YAML::from_yaml(@_);
 }
 
 sub to_yaml {
-    my $app = shift->app;
+    shift; # remove first element
     require 'Dancer2/Serializer/YAML.pm';
     Dancer2::Serializer::YAML::to_yaml(@_);
 }
 
 sub from_dumper {
-    my $app = shift->app;
+    shift; # remove first element
     require 'Dancer2/Serializer/Dumper.pm';
     Dancer2::Serializer::Dumper::from_dumper(@_);
 }
 
 sub to_dumper {
-    my $app = shift->app;
+    shift; # remove first element
     require 'Dancer2/Serializer/Dumper.pm';
     Dancer2::Serializer::Dumper::to_dumper(@_);
 }

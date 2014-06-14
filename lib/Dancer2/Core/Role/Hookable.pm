@@ -1,6 +1,6 @@
+package Dancer2::Core::Role::Hookable;
 # ABSTRACT: Role for hookable objects
 
-package Dancer2::Core::Role::Hookable;
 use Moo::Role;
 use Dancer2::Core;
 use Dancer2::Core::Types;
@@ -137,9 +137,9 @@ sub execute_hook {
     ref($self) eq 'Dancer2::Core::App' &&
         $self->engine('logger')->core("Entering hook $name");
 
-    my $res;
-    $res = $_->(@args) for @{ $self->hooks->{$name} };
-    return $res;
+    for my $hook ( @{ $self->hooks->{$name} } ) {
+        $hook->(@args);
+    }
 }
 
 1;

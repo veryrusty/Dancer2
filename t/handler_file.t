@@ -2,9 +2,10 @@ use strict;
 use warnings;
 
 use Test::More;
+use Plack::Test;
+use HTTP::Request::Common;
 
 {
-
     package StaticContent;
 
     use Dancer2;
@@ -16,26 +17,40 @@ use Test::More;
         send_file 'index.html';
     };
 
-    get '/image' => sub {
-        send_file '1x1.png';
+    prefix '/some' => sub {
+        get '/image' => sub {
+            send_file '1x1.png';
+            return "send_file returns; this content is ignored";
+        };
     };
 }
 
-use Dancer2::Test apps => ['StaticContent'];
+my $app = Dancer2->runner->psgi_app;
+is( ref $app, 'CODE', 'Got app' );
 
-subtest "Text content" => sub {
-    my $r = dancer_response GET => '/';
+test_psgi $app, sub {
+    my $cb = shift;
 
-    is $r->status, 200, 'send_file sets the status to 200';
-    my $charset = $r->headers->content_type_charset;
-    is $charset, 'UTF-8', "Text content type has UTF-8 charset";
-    like $r->content, qr{áéíóú}, "Text content contains UTF-8 characters";
-};
+    subtest "Text content" => sub {
+        my $r = $cb->( GET '/' );
 
-subtest "Binary content" => sub {
-    my $r = dancer_response GET => "/image";
+        is( $r->code, 200, 'send_file sets the status to 200' );
 
-    is $r->status, 200, 'send_file sets the status to 200';
+        my $charset = $r->headers->content_type_charset;
+        is( $charset, 'UTF-8', 'Text content type has UTF-8 charset' );
+        like(
+            $r->content,
+            qr{áéíóú},
+            'Text content contains UTF-8 characters',
+        );
+    };
+
+    subtest "Binary content" => sub {
+        my $r = $cb->( GET '/some/image' );
+
+        is( $r->code, 200, 'send_file sets the status to 200' );
+        unlike( $r->content, qr/send_file returns/, "send_file returns immediately with content");
+    };
 };
 
 done_testing;

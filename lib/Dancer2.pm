@@ -5,8 +5,8 @@ use strict;
 use warnings;
 use Class::Load 'load_class';
 use Dancer2::Core;
-use Dancer2::Core::Runner;
 use Dancer2::Core::App;
+use Dancer2::Core::Runner;
 use Dancer2::FileUtils;
 
 our $AUTHORITY = 'SUKRIA';
@@ -14,14 +14,14 @@ our $AUTHORITY = 'SUKRIA';
 # set version in dist.ini now
 # but we still need a basic version for
 # the tests
-$Dancer2::VERSION ||= '0.09';    # 2.0.9
+$Dancer2::VERSION ||= '0.140001'; # 2.14.1
 
 our $runner;
 
 sub runner {$runner}
 
 sub import {
-    my ( $class,  @args )   = @_;
+    my ( $class,  @args   ) = @_;
     my ( $caller, $script ) = caller;
 
     strict->import;
@@ -29,35 +29,28 @@ sub import {
     utf8->import;
 
     my @final_args;
-    my $as_script = 0;
-    foreach (@args) {
-        if ( $_ eq ':script' ) {
-            $as_script = 1;
-        }
-        elsif ( substr( $_, 0, 1 ) eq '!' ) {
-            push @final_args, $_, 1;
-        }
-        else {
-            push @final_args, $_;
+    foreach my $arg (@args) {
+        grep +( $arg eq $_ ), qw<:script :syntax>
+            and next;
+
+        if ( substr( $arg, 0, 1 ) eq '!' ) {
+            push @final_args, $arg, 1;
+        } else {
+            push @final_args, $arg;
         }
     }
 
-    scalar(@final_args) % 2
-      and die
-      "parameters to 'use Dancer2' should be one of : 'key => value', ':script', or !<keyword>, where <keyword> is a DSL keyword you don't want to import";
+    scalar @final_args % 2
+      and die q{parameters must be key/value pairs, ':script' or '!keyword'};
+
     my %final_args = @final_args;
 
     $final_args{dsl} ||= 'Dancer2::Core::DSL';
 
     # never instantiated the runner, should do it now
     if ( not defined $runner ) {
-
-        # TODO should support commandline options as well
-
-        $runner = Dancer2::Core::Runner->new( caller => $script, );
+        $runner = Dancer2::Core::Runner->new( caller => $script );
     }
-
-    my $server = $runner->server;
 
     # the app object
     # populating with the server's postponed hooks in advance
@@ -66,26 +59,18 @@ sub import {
         environment     => $runner->environment,
         location        => $runner->location,
         runner_config   => $runner->config,
-        postponed_hooks => $server->postponed_hooks,
+        postponed_hooks => $runner->postponed_hooks,
     );
 
     _set_import_method_to_caller($caller);
 
     # register the app within the runner instance
-    $server->register_application($app);
+    $runner->register_application($app);
 
     # load the DSL, defaulting to Dancer2::Core::DSL
     load_class( $final_args{dsl} );
     my $dsl = $final_args{dsl}->new( app => $app );
     $dsl->export_symbols_to( $caller, \%final_args );
-
-    #
-    #    $as_script = 1 if $ENV{PLACK_ENV};
-    #
-    #    Dancer2::GetOpt->process_args() if !$as_script;
-    #
-    # If uncommenting or removing this, be sure to update the description of
-    # :script above as well.
 }
 
 sub _set_import_method_to_caller {
@@ -199,16 +184,6 @@ things:
     use Dancer2 ( foo => 'bar' ); # sets option foo to bar
     use Dancer2 '!quux'; # Don't import DSL keyword quux
 
-=head3 Import Options
-
-=over 4
-
-=item C<:script>
-
-Not implemented yet, do not use.
-
-=back
-
 =head1 AUTHORS
 
 =head2 CORE DEVELOPERS
@@ -219,9 +194,11 @@ Not implemented yet, do not use.
     David Golden
     David Precious
     Franck Cuny
+    Mickey Nasriachi
     Russell Jenkins
     Sawyer X
     Stefan Hornburg (Racke)
+    Steven Humphrey
     Yanick Champoux
 
 =head2 CONTRIBUTORS
@@ -236,6 +213,7 @@ Not implemented yet, do not use.
     andrewsolomon
     Ashvini V
     B10m
+    baynes
     Blabos de Blebe
     Breno G. de Oliveira
     Celogeek
@@ -250,11 +228,13 @@ Not implemented yet, do not use.
     geistteufel
     Gideon D'souza
     Graham Knop
+    Gregor Herrmann
     Grzegorz Rożniecki
     Hobbestigrou
     Ivan Bessarabov
     James Aitken
     Jason A. Crome
+    Jean Stebens
     Jonathan Scott Duff
     Julio Fraire
     Keith Broughton
@@ -263,9 +243,9 @@ Not implemented yet, do not use.
     Matt Phillips
     Matt S Trout
     Maurice
-    Mickey Nasriachi
     mokko
     Olivier Mengué
+    Omar M. Othman
     Pau Amma
     Pedro Melo
     Rick Yakubowski
@@ -274,7 +254,6 @@ Not implemented yet, do not use.
     Shlomi Fish
     Slava Goltser
     smashz
-    Steven Humphrey
     Tom Hukins
     Upasana
     Vincent Bachelier

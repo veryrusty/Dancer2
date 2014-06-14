@@ -1,6 +1,6 @@
+package Dancer2::Core::Role::Engine;
 # ABSTRACT: Role for engines
 
-package Dancer2::Core::Role::Engine;
 use Moo::Role;
 use Dancer2::Core::Types;
 
@@ -14,16 +14,6 @@ This role consumes the L<Dancer2::Core::Role::Hookable> role.
 =cut
 
 with 'Dancer2::Core::Role::Hookable';
-
-=attr environment
-
-The value of the current environment
-
-=cut
-
-has environment => ( is => 'ro' );
-
-has location => ( is => 'ro' );
 
 =attr context
 

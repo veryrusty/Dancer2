@@ -2,6 +2,14 @@
 
 use strict;
 use warnings;
+use File::Spec;
+use File::Basename qw/dirname/;
+
+BEGIN {
+    # Disable route handlers so we can actually test route_exists
+    # and route_doesnt_exist. Use config that disables default route handlers.
+    $ENV{DANCER_CONFDIR} = File::Spec->catdir(dirname(__FILE__), 'dancer-test');
+}
 
 use Test::More tests => 49;
 
@@ -11,6 +19,8 @@ use Dancer2::Core::Request;
 use File::Temp;
 use Encode;
 use URI::Escape;
+
+$Dancer2::Test::NO_WARN = 1;
 
 my @routes = (
     '/foo',
@@ -28,18 +38,21 @@ my @routes = (
             REQUEST_URI       => '/foo',
         }
     ),
-    Dancer2::Core::Response->new(
-        content => 'fighter',
-        status  => 404,
-    )
+);
+my $fighter = Dancer2::Core::Response->new(
+    content => 'fighter',
+    status  => 404,
 );
 
-route_doesnt_exist $_ for @routes;
+route_doesnt_exist $_ for (@routes, $fighter);
+
 
 get '/foo' => sub {'fighter'};
-$routes[-1]->status(200);
 
 route_exists $_, "route $_ exists" for @routes;
+
+$fighter->status(200);
+push @routes, $fighter;
 
 for (@routes) {
     my $response = dancer_response $_;
@@ -108,3 +121,20 @@ $param_response =
     { params => { test => [ 'test/', $russian_test ] } } );
 is $param_response->content, 'test/' . encode( 'UTF-8', $russian_test ),
   'multi utf8 value properly merge';
+
+get '/headers' => sub {
+    join " : ", request->header('X-Sent-By'), request->cookies->{foo};
+};
+note "extra headers in request"; {
+    my $sent_by = 'Dancer2::Test';
+    my $headers_test = dancer_response( GET => '/headers',
+        {
+            headers => [
+                [ 'X-Sent-By' => $sent_by ],
+                [ 'Cookie' => "foo=bar" ],
+            ],
+        }
+    );
+    is $headers_test->content, "$sent_by : bar",
+        "extra headers included in request";
+}

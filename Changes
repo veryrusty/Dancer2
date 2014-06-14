@@ -1,7 +1,78 @@
 {{$NEXT}}
 
+0.141000  2014-06-08 22:27:03CEST+0200 Europe/Amsterdam
+
+    * No functional changes.
+
+0.140900_01 2014-06-07 23:32:56IDT+0300 Asia/Jerusalem
+
+    [ BUG FIXES ]
+    * GH #447: Setting the apphandler now triggers the Dancer Runner
+      configuration change, which works. (Sawyer X)
+    * GH #578: Remove the default engine configurations. (Sawyer X)
+    * GH #567: Check for proper module names in loading engines. Might help
+      with taint mode. (Sawyer X)
+    * GH #585, #595: Return 405 Method Not Allowed instead of 500.
+      (Omar M. Othman)
+    * GH #570, #579: Ensure keywords pass, send_error and send_file
+      exit immediatly when executed. (Russell Jenkins)
+
+    [ ENHANCEMENTS ]
+    * GH #587: Serializer::Mutable alive! (Pedro Bruno)
+
+    [ DOCUMENTATION ]
+    * Fix doc for params(). Ported from Dancer#1025 (Stefan Hornburg)
+
+0.140001  2014-05-01 10:49:25CEST+0200 Europe/Amsterdam
+
+    [ BUG FIXES ]
+    * Bugfix for extracting multiple cookies within a request.
+      (Cymon, Russell Jenkins)
+    * Require minimum version of Plack to make sure we can add the Head
+      middleware. Not exactly a bug, but not a feature. (Sawyer X)
+
+    [ DOCUMENTATION ]
+    * Correct reference to HTTP::Server::Simple::PSGI. (Russell Jenkins)
+
+0.140000  2014-04-28 23:14:31CEST+0200 Europe/Amsterdam
+
+    [ ENHANCEMENTS ]
+    * Replace Config role with better ConfigReader role.
+      (Mickey Nasriachi, Stefan Hornburg, Sawyer X)
+    * Move App-related attributes (engines) to App instead of config role.
+      (Mickey Nasriachi, Stefan Hornburg, Sawyer X)
+    * Untangle Runner-Server (removing Server entirely).
+      (Mickey Nasriachi, Stefan Hornburg, Sawyer X)
+    * Replace HTTP::Server::Simple::PSGI with HTTP::Server::PSGI.
+      (Mickey Nasriachi, Stefan Hornburg, Sawyer X)
+    * GH #527: Build request cookie objects from request headers, not env.
+      (Russell Jenkins)
+    * GH #569: Transform cookie using the HTTP_COOKIE header, per PSGI spec.
+      (Russell Jenkins)
+    * GH #559, #544: Use Plack middleware for HEAD request content removal.
+      (Russell Jenkins)
+    * GH #513, #483: Deserialize body content for DELETE requests.
+      (Russell Jenkins, Yanick Champoux, Sawyer X)
+
+0.13      2014-04-13 19:19:44CEST+0200 Europe/Amsterdam
+
+    [ ENHANCEMENTS ]
+    * GH #562: Change YAML::Any to YAML (Steven Humphrey, Russell Jenkins).
+
+    [ BUG FIXES ]
+    * GH #524: Double encoding for YAML sessions.
+    * GH #557: Switch to using YAML::Old.
+    * GH #548: Deserializer test failure.
+
+0.12      2014-04-07 22:42:12 Europe/Amsterdam
+
     [ ENHANCEMENTS ]
     * GH#518: Bump jQuery to 1.10.2 (Grzegorz Rożniecki).
+    * GH#535: Support OPTIONS and PATCH requests in Server::Standalone.
+      (Russell Jenkins)
+    * GH#553: Dancer2 CLI: specify directory to write app skeleton
+      (Jean Stebens)
+    * GH#543: Additional HTTP Methods for Ajax plugin (Jean Stebens).
 
     [ DOCUMENTATION ]
     * RT#91428: POD encoding set to UTF-8 in main .pm (Gregor Herrmann).
@@ -16,6 +87,14 @@
     [ BUG FIXES ]
     * GH#528,529: Force PSGI server in dispatch scripts for CGI or fcgi
       deployments (Erik Smit, Alberto Simões)
+    * GH#550,GH#551: Update all headers in Handler::File
+      (Sawyer X, Stefan @racke Hornburg)
+    * GH#540: Fix hook execution when default scalar was used in hook code.
+      (baynes, Russell Jenkins)
+    * GH#552: Rework test suite to use Plack::Test
+      (Sawyer X, Stefan @racke Hornburg)
+    * GH#560: Return value of hooks do not alter response content.
+      (Jean Stebens)
 
 0.11      2013-12-15 14:19:22 Europe/Amsterdam
 

@@ -21,12 +21,13 @@ sub run_test {
         SERVER_PORT          => 5000,
         SERVER_PROTOCOL      => 'HTTP/1.1',
         REMOTE_ADDR          => '127.0.0.1',
-        X_FORWARDED_FOR      => '127.0.0.2',
-        X_FORWARDED_HOST     => 'secure.frontend',
-        X_FORWARDED_PROTOCOL => 'https',
+        HTTP_X_FORWARDED_FOR      => '127.0.0.2',
+        HTTP_X_FORWARDED_HOST     => 'secure.frontend',
+        HTTP_X_FORWARDED_PROTOCOL => 'https',
         REMOTE_HOST          => 'localhost',
         HTTP_USER_AGENT      => 'Mozilla',
         REMOTE_USER          => 'sukria',
+        HTTP_COOKIE          => 'cookie.a=foo=bar; cookie.b=1234abcd',
     };
 
     my $req = Dancer2::Core::Request->new( env => $env );
@@ -63,6 +64,9 @@ sub run_test {
     note "tests params";
     is_deeply { $req->params }, { foo => 42, bar => [ 12, 13, 14 ] };
 
+    note "tests cookies";
+    is( keys %{ $req->cookies }, 2, "multiple cookies extracted" );
+
     my $forward = $req->make_forward_to('/somewhere');
     is $forward->path_info, '/somewhere';
     is $forward->method,    'GET';
@@ -97,7 +101,7 @@ sub run_test {
             is_behind_proxy => 1
         );
         is $req->secure, 1;
-        is $req->host,   $env->{X_FORWARDED_HOST};
+        is $req->host,   $env->{HTTP_X_FORWARDED_HOST};
         is $req->scheme, 'https';
     }
 
