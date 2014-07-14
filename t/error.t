@@ -10,6 +10,8 @@ use Dancer2::Core::Response;
 use Dancer2::Core::Request;
 use Dancer2::Core::Error;
 
+use JSON (); # Error serialization
+
 my $env = {
     'psgi.url_scheme' => 'http',
     REQUEST_METHOD    => 'GET',
@@ -36,7 +38,7 @@ subtest 'basic defaults of Error object' => sub {
     my $e = Dancer2::Core::Error->new( context => $c, );
     is $e->status,  500,                                 'code';
     is $e->title,   'Error 500 - Internal Server Error', 'title';
-    is $e->message, undef,                               'message';
+    is $e->message, '',                               'message';
     like $e->content, qr!http://localhost:5000/foo/css!,
         "error content contains css path relative to uri_base";
 };
@@ -131,4 +133,64 @@ subtest 'Error with show_errors: 1' => sub {
     like $err->content => qr/our exception/;
 };
 
+subtest 'App dies with serialized error' => sub {
+    {
+        package AppDies;
+        use Dancer2;
+        set serializer => 'JSON';
+
+        get '/die' => sub {
+            die "oh no\n"; # I should serialize
+        };
+    }
+
+    my $app = Dancer2->runner->psgi_app;
+    isa_ok( $app, 'CODE', 'Got app' );
+
+    test_psgi $app, sub {
+        my $cb = shift;
+        my $r  = $cb->( GET '/die' );
+
+        is( $r->code, 500, '/die returns 500' );
+
+        my $out = eval { JSON->new->utf8(0)->decode($r->decoded_content) };
+        ok(!$@, 'JSON decoding serializer error produces no errors');
+        isa_ok($out, 'HASH', 'Error deserializes to a hash');
+        like($out->{exception}, qr/^oh no/, 'Get expected error message');
+    };
+};
+
+subtest 'Error with exception object' => sub {
+    local $@;
+    eval { MyTestException->throw('a test exception object') };
+    my $err = Dancer2::Core::Error->new(
+        context     => $c,
+        exception   => $@,
+        show_errors => 1,
+    )->throw;
+
+    like $err->content, qr/a test exception object/, 'Error content contains exception message';
+};
+
 done_testing;
+
+
+{   # Simple test exception class
+    package MyTestException;
+
+    use overload '""' => \&as_str;
+
+    sub new {
+        return bless {};
+    }
+
+    sub throw {
+        my ( $class, $error ) = @_;
+        my $self = ref($class) ? $class : $class->new;
+        $self->{error} = $error;
+
+        die $self;
+    }
+
+    sub as_str { return $_[0]->{error} }
+}

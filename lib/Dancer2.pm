@@ -14,11 +14,12 @@ our $AUTHORITY = 'SUKRIA';
 # set version in dist.ini now
 # but we still need a basic version for
 # the tests
-$Dancer2::VERSION ||= '0.140001'; # 2.14.1
+$Dancer2::VERSION ||= '0.143000'; # 2.14.3
 
 our $runner;
 
-sub runner {$runner}
+sub runner   {$runner}
+sub psgi_app { __PACKAGE__->runner->psgi_app }
 
 sub import {
     my ( $class,  @args   ) = @_;
@@ -232,6 +233,7 @@ things:
     Grzegorz Rożniecki
     Hobbestigrou
     Ivan Bessarabov
+    Jakob Voss
     James Aitken
     Jason A. Crome
     Jean Stebens
