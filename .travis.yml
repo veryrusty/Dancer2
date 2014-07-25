@@ -8,16 +8,6 @@ perl:
     - "5.12"
     - "5.10"
 
-notifications:
-  irc:
-    channels:
-      - "irc.perl.org#dancer-core"
-    template:
-      - "%{branch}#%{build_number} by %{author}: %{message} (%{build_url})"
-    on_success: change
-    on_failure: always
-    use_notice: true
-
 install:
 #Safe fails to install due to failing tests since version 2.35 on perl < 5.14
     - perl -E 'exit($] < 5.014)' || cpanm --no-skip-satisfied Safe || cpanm --no-skip-satisfied --notest Safe || { cat ~/.cpanm/build.log ; false ; }
