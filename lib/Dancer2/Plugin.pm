@@ -2,51 +2,42 @@ package Dancer2::Plugin;
 # ABSTRACT: Extending Dancer2's DSL with plugins
 
 use Moo::Role;
-use Carp 'croak', 'carp';
+with 'Dancer2::Core::Role::Exporter';
+
+use Carp 'carp';
+use Dancer2::Core::Plugin;
 use Dancer2::Core::DSL;
-use Scalar::Util qw();
+use Import::Into;
 
 my $dsl_deprecation_wrapper = 0;
 sub import {
     my $class  = shift;
     my $plugin = caller;
+    my $caller = caller(1);
 
-    # First, export Dancer2::Plugins symbols
-    my @export = qw(
-      execute_hook
-      register_hook
-      register_plugin
-      register
-      on_plugin_import
-      plugin_setting
-      plugin_args
-    );
-
-    for my $symbol (@export) {
-        no strict 'refs';
-        *{"${plugin}::${symbol}"} = *{"Dancer2::Plugin::${symbol}"};
-    }
+    $_->import::into($plugin) for qw(strict warnings utf8);
 
     my $dsl = _get_dsl();
-    return if !defined $dsl;
 
-# DEPRECATION NOTICE
-# We expect plugin to be written with a $dsl object now, so
-# this keywords will trigger a deprecation notice and will be removed in a later
-# version of Dancer2.
+    my $plugin_obj = Dancer2::Core::Plugin->new(
+        name => $plugin,
+    );
+    # Export plugin DSL into $plugin
+    $plugin_obj->export_symbols_to( $plugin, { keywords => $plugin_obj->plugin_dsl_keywords } );
 
- # Support for Dancer 1 syntax for plugin.
- # Then, compile Dancer 2's DSL keywords into self-contained keywords for the
- # plugin (actually, we call all the symbols by giving them $caller->dsl as
- # their first argument).
- # These modified versions of the DSL are then exported in the namespace of the
- # plugin.
-    if (! grep { $_ eq ':no_dsl' } @_) {
+    # Support for Dancer 1 syntax for plugin.
+    # Then, compile Dancer 2's DSL keywords into self-contained keywords for the
+    # plugin (actually, we call all the symbols by giving them $caller->dsl as
+    # their first argument).
+    # These modified versions of the DSL are then exported in the namespace of the
+    # plugin.
+    if ($dsl && ! grep { $_ eq ':no_dsl' } @_) {
+        my $dsl_keywords = {};
         for my $symbol ( keys %{ $dsl->keywords } ) {
 
             # get the original symbol from the real DSL
             no strict 'refs';
-            no warnings qw( redefine once );
+            no warnings 'once';
             my $code = *{"Dancer2::Core::DSL::$symbol"}{CODE};
 
             # compile it with $caller->dsl
@@ -56,21 +47,19 @@ sub import {
                 $code->( $dsl, @_ );
             };
 
-            # Bind the newly compiled symbol to the caller's namespace.
-            # As this may redefine a symbol, ensure the new coderef has
-            # the same prototype signature.
-            my $existing = *{"${plugin}::${symbol}"};
-            my $prototype = prototype \&$existing;
-            *{"${plugin}::${symbol}"} = Scalar::Util::set_prototype( \&$compiled, $prototype );
+            $dsl_keywords->{$symbol} = {
+                 code => $compiled,
+                 options => {},
+            };
 
             $dsl_deprecation_wrapper = $compiled if $symbol eq 'dsl';
         }
+        $plugin_obj->export_keywords_to( $dsl_keywords, $plugin );
     }
 
-    # Finally, make sure our caller becomes a Moo::Role
-    # Perl 5.8.5+ mandatory for that trick
-    @_ = ('Moo::Role');
-    goto &Moo::Role::import;
+    # register plugin if there is a dsl
+    # some of the tests use plugins that are not part of Dancer2 apps.
+    $dsl && $dsl->dancer_app->register_plugin( $plugin_obj );
 }
 
 sub _get_dsl {
