@@ -47,12 +47,16 @@ sub import {
                 $code->( $dsl, @_ );
             };
 
+            # if the symbol is 'dsl', stop the  call '$dsl->dsl' nonsense
+            if ( $symbol eq 'dsl' ) {
+                $compiled = sub { $dsl };
+                $dsl_deprecation_wrapper = $compiled
+            }
+
             $dsl_keywords->{$symbol} = {
                  code => $compiled,
                  options => {},
             };
-
-            $dsl_deprecation_wrapper = $compiled if $symbol eq 'dsl';
         }
         $plugin_obj->export_keywords_to( $dsl_keywords, $plugin );
     }
