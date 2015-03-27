@@ -695,7 +695,6 @@ sub hook_candidates {
             and push @route_handlers, $handler_code;
     }
 
-    # TODO : get the list of all plugins registered
     my @plugins = @{ $self->plugins };
 
     ( @route_handlers, @engines, @plugins );
